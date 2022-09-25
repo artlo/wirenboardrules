@@ -75,7 +75,7 @@ function addServoPosition(servo) {
 
 function subServoPosition(servo, full) {
     if (full) {
-        log.info("")
+        log.info("close servo", servo.deviceID)
         dev[servo.deviceID]["position"] = 0;
         return
     }
