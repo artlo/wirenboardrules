@@ -1,2 +1,4 @@
 **/.idea
-/privateContacts.js
+modules/privateContacts.js
+modules/devices.js
+**/.DS_Store
