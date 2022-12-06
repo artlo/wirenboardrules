@@ -1,4 +1,4 @@
 **/.idea
-modules/privateContacts.js
-modules/devices.js
+wbrules/modules/privateContacts.js
+wbrules/modules/devices.js
 **/.DS_Store

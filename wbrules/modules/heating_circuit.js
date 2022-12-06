@@ -1,6 +1,6 @@
 var oneMinute = 60 * 1000;
 
-var tempAccuracy = 2.5;
+var tempAccuracy = 1.5;
 var minTemperatureInCircle = 40;
 var baseCircuit = {};
 
@@ -14,26 +14,33 @@ Object.defineProperty(baseCircuit, "isEnabled", { get: isEnabledDevice
 
 baseCircuit.changeEnable = function (value) {
   if (value) {
-    this.checkConditions();
+    startTicker(this.timerID, 1);
   } else {
     timers[this.timerID].stop();
-    this.servo.sub(true);
   }
 }
 
 baseCircuit.checkConditions = function() {
-  log.debug("checking conditions", this.deviceID);
   if (!this.isEnabled) {
     return;
   }
+  log.info("checking conditions", this.deviceID);
+
   if (!timers[this.timerID].firing) {
-     return;
+    log.info("time still active", this.deviceID)
+    return;
   }
 
   var addLog = false;
+  log.info("conditions", this.deviceID, "out temp", dev[this.tempSensorOutID], "in temp", dev[this.tempSensorInID])
+
+  // if temperature difference more than wish value, it's needed to open servo, because heating needs more power
+  // for supporting temperature in circle
   if (this.isCircleTempDifferenceIncreased() || dev[this.tempSensorInID] < minTemperatureInCircle) {
-    this.servo.add();
+    this.servo.add(2);
     addLog = true;
+  // if temperature difference less than wish value, it's needed to close servo, because heating is enough
+  // for supporting temperature in circle
   } else if (this.isCircleTempDifferenceDecreased()) {
     this.servo.sub(false);
     addLog = true;
@@ -41,7 +48,7 @@ baseCircuit.checkConditions = function() {
   if (addLog) {
     log.info("starting temperature regulation", "device_id", this.deviceID, "out_temperature", dev[this.tempSensorOutID], "in_temperature", dev[this.tempSensorInID]);
   }
-  startTicker(this.timerID, 5 * oneMinute);
+  startTicker(this.timerID, 3 * oneMinute);
 }
 
 baseCircuit.isCircleTempDifferenceIncreased = function() {
@@ -86,6 +93,10 @@ baseCircuit.createDevice = function (name) {
     }
   });
 
+  if (this.isEnabled) {
+    this.changeEnable(true);
+  };
+
   var circuit = this;
   defineRule("rule_"+this.deviceID + "_enabled", {
     whenChanged: this.deviceID+"/enabled",
@@ -95,7 +106,7 @@ baseCircuit.createDevice = function (name) {
   });
 
   defineRule("rule_timer_" + this.deviceID, {
-    asSoonAs: function (){timers[circuit.timerID].firing;},
+    when: function (){return timers[circuit.timerID].firing;},
     then: function () {circuit.checkConditions();}
   });
 
