@@ -38,10 +38,6 @@ baseServo.changePosition = function(newValue) {
     return;
   }
   this.position = newValue;
-
-  // It's needed to update virtual device position when regulation is performed by direct command: change position
-  // it will cause rule run, but nothing will change since the new position and previous position remains unchanged
-  dev[this.positionCellID] = newValue;
   dev[this.deviceID]["status"] = "In work";
   log.info("moving_servo_start", this.deviceID, "relay", relayControlID, "difference", difference);
   dev[relayControlID] = true;
@@ -67,19 +63,21 @@ baseServo.add = function(count) {
       return false
     }
   }
-  this.changePosition(dev[this.positionCellID] + add_count);
+  var current_position = dev[this.positionCellID];
+  dev[this.positionCellID] = current_position + add_count;
   return true;
 };
 
 baseServo.sub = function(full) {
   if (full) {
     log.info("close servo", this.deviceID)
-    this.changePosition(0);
-    return
+    dev[this.positionCellID] = 0;
+    return true;
   }
 
   if (dev[this.positionCellID] > minPosition) {
-    this.changePosition(dev[this.positionCellID] - 1);
+    var current_position = dev[this.positionCellID];
+    dev[this.positionCellID] = current_position - 1;
     return true;
   }
   return false
@@ -98,7 +96,7 @@ baseServo.createVirtualDevice = function(title) {
           title: "Позиция",
           type: "range",
           value: 1,
-          max: maxPosition - 1,
+          max: maxPosition,
           min: minPosition
         },
         "status": {
@@ -114,9 +112,7 @@ baseServo.createVirtualDevice = function(title) {
 
   var that = this;
   defineRule("rule_" + this.deviceID, {
-    when: function () {
-      return dev[that.positionCellID] != that.position;
-    },
+    whenChanged: that.positionCellID,
     then: function(newValue, devName, cellName) {
       that.changePosition(newValue);
     }
