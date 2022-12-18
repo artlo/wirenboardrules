@@ -49,8 +49,8 @@ function initController(controllerDeviceID, phaseOneDeviceID, phaseTwoDeviceID, 
   dev[controllerDeviceID]["hasFullVoltage"] = voltage_params["has_full_voltage"];
 
   defineRule("full_voltage_changed_rule", {
-    when: function () {
-      return controller.hasInputVoltage()["full_voltage"] != controller.has_voltage;
+    asSoonAs: function () {
+      return controller.hasInputVoltage()["full_voltage"];
     },
     then: function (newValue, devName, cellName) {
       var ts = Date.now();
