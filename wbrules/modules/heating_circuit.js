@@ -15,8 +15,10 @@ Object.defineProperty(baseCircuit, "isEnabled", { get: isEnabledDevice
 baseCircuit.changeEnable = function (value) {
   if (value) {
     startTicker(this.timerID, 1);
+    this.pump.on();
   } else {
     timers[this.timerID].stop();
+    this.pump.off();
   }
 }
 
@@ -37,12 +39,18 @@ baseCircuit.checkConditions = function() {
   // if temperature difference more than wish value, it's needed to open servo, because heating needs more power
   // for supporting temperature in circle
   if (this.isCircleTempDifferenceIncreased() || dev[this.tempSensorInID] < minTemperatureInCircle) {
-    this.servo.add(2);
+    if (!this.servo.add(2)) {
+      // servo is fully opened add pump power
+      this.pump.increase();
+    }
     addLog = true;
   // if temperature difference less than wish value, it's needed to close servo, because heating is enough
   // for supporting temperature in circle
   } else if (this.isCircleTempDifferenceDecreased()) {
-    this.servo.sub(false);
+    if (!this.pump.decrease()) {
+      // if pump is already minimum, then close servo
+      this.servo.sub(false);
+    }
     addLog = true;
   }
   if (addLog) {
@@ -126,10 +134,11 @@ baseCircuit.createDevice = function (name) {
   this.deviceCreated = true;
 }
 
-exports.newCircuit = function (deviceID, servo, tempSensorInID, tempSensorOutID) {
+exports.newCircuit = function (deviceID, servo, pump, tempSensorInID, tempSensorOutID) {
   var circuit = Object.create(baseCircuit);
   circuit.deviceID = "circle_" + deviceID;
   circuit.servo = servo;
+  circuit.pump = pump;
   circuit.tempSensorInID = tempSensorInID;
   circuit.tempSensorOutID = tempSensorOutID;
   circuit.timerID = deviceID + "condition_checking_timer";

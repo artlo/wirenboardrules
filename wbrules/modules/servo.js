@@ -59,9 +59,10 @@ baseServo.add = function(count) {
   } else {
     if (possible_add > 0) {
       add_count = possible_add;
-    } else {
-      return false
     }
+  }
+  if (add_count == 0) {
+    return false;
   }
   var current_position = dev[this.positionCellID];
   dev[this.positionCellID] = current_position + add_count;

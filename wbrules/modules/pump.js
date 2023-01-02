@@ -12,10 +12,6 @@ basePump.setPower = function (percent, forceRun) {
     return;
   }
 
-  if (dev[this.deviceID]["power"] == percent && !forceRun) {
-    return;
-  }
-
   var pwmPumpInput = 0;
   if (percent == 0) {
     pwmPumpInput = pwmStop;
@@ -23,7 +19,6 @@ basePump.setPower = function (percent, forceRun) {
     pwmPumpInput = pwmMinPower - percent * (pwmMinPower - pwmMaxPower) / 100.0;
   }
 
-  dev[this.deviceID]["power"] = percent;
   var wbPWMOutput = pwmPumpInput * wbPWMOutputMax / 100.0;
   log.info("set pwm", this.deviceID, "pump pwm percent", pwmPumpInput, "wb pwm width", wbPWMOutput);
   dev[this.wbPWMDeviceID] = wbPWMOutput;
@@ -33,6 +28,32 @@ basePump.setPower = function (percent, forceRun) {
 basePump.off = function (){
   log.info("pump is switched to manual mode", this.deviceID);
   dev[this.wbPWMDeviceID] = 0;
+}
+
+basePump.on = function () {
+  dev[this.deviceID]["enabled"] = true;
+}
+
+// increase Power in 20%
+basePump.increase = function () {
+  var current_power = dev[this.deviceID]["power"];
+  var new_power = 0;
+  if (current_power <= 80) {
+    new_power = current_power + 20;
+  } else {
+    new_power = 100;
+  }
+  dev[this.deviceID]["power"] = new_power;
+}
+
+basePump.decrease = function () {
+  var current_power = dev[this.deviceID]["power"];
+  if (current_power <= 20) {
+    log.info("pump power is minimum", this.deviceID);
+    return false;
+  }
+  dev[this.deviceID]["power"] = current_power - 20;
+  return true;
 }
 
 basePump.createDevice = function (name) {
@@ -78,4 +99,5 @@ exports.newPump = function (deviceID, wbDeviceID) {
   var pump = Object.create(basePump);
   pump.deviceID = "pump_" + deviceID;
   pump.wbPWMDeviceID = wbDeviceID;
+  return pump;
 };

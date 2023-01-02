@@ -7,7 +7,7 @@ var controller = voltage.VoltageController();
 
 defineRule("notify_voltage_disabled", {
   asSoonAs: function () {
-    return !controller.has_voltage && (Date.now() - controller.votage_disables_at) > 30 * oneMinute;
+    return !dev["voltageControl/hasFullVoltage"] && (Date.now() - controller.votage_disables_at) > 30 * oneMinute;
   },
   then: function () {
     log.info("notify about voltage absence");
