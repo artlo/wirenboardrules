@@ -35,9 +35,9 @@ defineRule({
   then: function name(newValue, devName, cellName) {
     log.warning("porch", newValue);
     if (newValue) {
-    publish(devices.garage.porch_lighting + "/set", JSON.stringify({state_left: "ON"}),2, false)
+    publish("zigbee2mqtt/" + devices.garage.porch_lighting + "/set", JSON.stringify({state_left: "ON"}),2, false)
     } else {
-      publish(devices.garage.porch_lighting + "/set", JSON.stringify({state_left: "OFF"}),2, false)
+      publish("zigbee2mqtt/" + devices.garage.porch_lighting + "/set", JSON.stringify({state_left: "OFF"}),2, false)
     }
   }
 });
@@ -50,7 +50,7 @@ defineRule({
       status = true;
     }
     if (status != dev["porch_ligths/enabled"]) {
-      publish(devices.garage.porch_lighting + "/set", JSON.stringify({state_left: "OFF", state_right: "OFF"}),2, false)
+      publish("zigbee2mqtt/" + devices.garage.porch_lighting + "/set", JSON.stringify({state_left: "OFF", state_right: "OFF"}),2, false)
     }
   }
 });
